@@ -6,6 +6,13 @@ $(document).ready( function() {
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
 	});
+	$('.inspiration-getter').submit( function(event){
+		// remove previous results, just as above
+		$('.results').html('');
+		//get field input, copied from above
+		var tags = $(this).find("input[name='answerers']").val();
+		getInspiration(tags);
+	});
 });
 
 // this function takes the question object returned by StackOverflow 
@@ -41,6 +48,26 @@ var showQuestion = function(question) {
 	return result;
 };
 
+//duplicating above to work for showInpiration
+var showInspiration = function(answerer) {
+	// clone our result template code
+	var result = $('.templates .inspiration').clone();
+	
+	// Set the answerer name properties in result
+	var answererElem = result.find('.answerer-name a');
+	answererElem.attr('href', answerer.user.link);
+	answererElem.text(answerer.user.display_name);
+
+	// set the post count in results
+	var count = result.find('.post-count');
+	count.text(answerer.post_count);
+
+	// set the score property in result
+	var scored = result.find('.score');
+	scored.text(answerer.score);
+
+	return result;
+};
 
 // this function takes the results object from StackOverflow
 // and creates info about search results to be appended to DOM
@@ -87,6 +114,43 @@ var getUnanswered = function(tags) {
 		$('.search-results').append(errorElem);
 	});
 };
+
+// Mimicing function above, attempting to search stack overflow api for most-answered questions
+var getInspiration = function(tags){
+
+	// the parameters for the stackoverflow API
+	var request = {site:'stackoverflow'};
+
+	var result = $.ajax({
+		url: "http://api.stackexchange.com/2.2/tags/"+tags+"/top-answerers/all_time",
+		data: request,
+		dataType: "jsonp",
+		type: "GET",
+		})
+	.done(function(result){
+		var searchResults = showSearchResults(tags, result.items.length);
+
+		$('.search-results').html(searchResults);
+
+		$.each(result.items, function(i, item) {
+			var answerer = showInspiration(item);
+			$('.results').append(answerer);
+		});
+	})
+	.fail(function(jqXHR, error, errorThrown){
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
+};
+
+
+
+
+
+
+
+
+
 
 
 
